@@ -1,1 +1,108 @@
-<html><body>hejsan</body></html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Intro to SceneView - Create a 3D map - 4.15</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.16/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.16/"></script>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/Graphic",
+      "esri/WebScene",
+      "esri/views/SceneView",
+      "esri/geometry/Point",
+      "esri/geometry/Polyline",
+      "esri/geometry/SpatialReference",
+      "esri/geometry/geometryEngine",
+      "esri/geometry/support/geodesicUtils"
+    ], function(
+      Map,
+      Graphic,
+      WebScene,
+      SceneView,
+      Point,
+      Polyline,
+      SpatialReference,
+      geometryEngine,
+      geodesicUtils
+    ) {
+      var scene = new WebScene({
+        portalItem: {
+          id: "13ee3fce1c64408b98d3f8a4756a8a52"
+        }
+      });
+      var view = new SceneView({
+        container: "viewDiv",
+        map: scene,
+        //center: [-110, 20]
+      });
+      const START = new Point({
+        x: -13046164.817899998,
+        y: 4036335.269100003,
+        spatialReference: new SpatialReference({
+          wkid: 102100
+        })
+      });
+      console.log("START", START);
+      view.when().then(function() {
+        let DISTANCE = 987; // km so far
+        const layer1 = view.map.layers.find(layer => layer.title === "Route around the world");
+        view.whenLayerView(layer1).then(function(layerView) {
+          layerView.watch("updating", function(val) {
+            if (!val) { // wait for the layer view to finish updating
+              layerView.queryFeatures().then(function(results) {
+                var firstHalf = results.features[0];
+                let polyline = firstHalf.geometry;
+                try {
+                  const ptBuff = geometryEngine.geodesicBuffer(
+                    START,
+                    DISTANCE,
+                    "kilometers"
+                  );
+                  const cutter = new Polyline({
+                    paths: ptBuff.rings[0],
+                    spatialReference: ptBuff.spatialReference
+                  });
+                  const niceline = geometryEngine.cut(polyline, cutter);
+                  console.log("niceline", niceline);
+                  const graphic3 = new Graphic({
+                    geometry: niceline[1],
+                    symbol: {
+                      type: "simple-line", // autocasts as new SimpleFillSymbol
+                      color: "#fcc745",
+                      cap: "butt",
+                      width: 20,
+                    }
+                  });
+                  view.graphics.add(graphic3);
+                } catch (error) {
+                  console.log(error);
+                }
+              });
+            }
+          });
+        });
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div id="viewDiv"></div>
+</body>
+
+</html>
