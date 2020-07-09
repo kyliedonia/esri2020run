@@ -48,11 +48,23 @@
       var view = new SceneView({
         container: "viewDiv",
         map: scene,
-        //center: [-110, 20]
+        //center: [-110, 20],
+        alphaCompositingEnabled: true,
+        environment: {
+          background: {
+            type: "color",
+            color: [0, 0, 0, 0]
+          },
+          starsEnabled: false,
+          atmosphereEnabled: false
+        },
+        ui: {
+          components: ["attribution"]
+        }
       });
       const START = new Point({
-        x: -13046164.817899998,
-        y: 4036335.269100003,
+        x: -13046164,
+        y: 4036335,
         spatialReference: new SpatialReference({
           wkid: 102100
         })
