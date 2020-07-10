@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Intro to SceneView - Create a 3D map - 4.15</title>
+  <title>How far along have we come?</title>
   <style>
     html,
     body,
@@ -69,7 +69,12 @@
           wkid: 102100
         })
       });
-      console.log("START", START);
+      const lineSymbol = {
+        type: "simple-line",
+        color: "#fcc745",
+        cap: "round",
+        width: 20
+      }
       view.when().then(function() {
         let DISTANCE = 987; // km so far
         const layer1 = view.map.layers.find(layer => layer.title === "Route around the world");
@@ -89,18 +94,13 @@
                     paths: ptBuff.rings[0],
                     spatialReference: ptBuff.spatialReference
                   });
-                  const niceline = geometryEngine.cut(polyline, cutter);
-                  console.log("niceline", niceline);
-                  const graphic3 = new Graphic({
-                    geometry: niceline[1],
-                    symbol: {
-                      type: "simple-line", // autocasts as new SimpleFillSymbol
-                      color: "#fcc745",
-                      cap: "butt",
-                      width: 20,
-                    }
+                  const lineSoFar = geometryEngine.cut(polyline, cutter);
+                  const graphicSoFar = new Graphic({
+                    geometry: lineSoFar[1],
+                    symbol: lineSymbol
                   });
-                  view.graphics.add(graphic3);
+                  view.graphics.add(graphicSoFar);
+                  view.goTo(graphicSoFar);
                 } catch (error) {
                   console.log(error);
                 }
