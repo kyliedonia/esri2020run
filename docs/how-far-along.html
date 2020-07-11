@@ -1,5 +1,4 @@
 <html>
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
@@ -19,6 +18,12 @@
   <script src="https://js.arcgis.com/4.16/"></script>
 
   <script>
+    const href = window.location.href;
+    const pageURL = new URL(href);
+    let DISTANCE = 900; // km so far, change to like 1 when not testing...
+    if (pageURL.searchParams.get("distance")) {
+      DISTANCE = pageURL.searchParams.get("distance");
+    }
     require([
       "esri/Map",
       "esri/Graphic",
@@ -76,7 +81,6 @@
         width: 20
       }
       view.when().then(function() {
-        let DISTANCE = 987; // km so far
         const layer1 = view.map.layers.find(layer => layer.title === "Route around the world");
         view.whenLayerView(layer1).then(function(layerView) {
           layerView.watch("updating", function(val) {
