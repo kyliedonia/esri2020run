@@ -1,4 +1,5 @@
 <html>
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
@@ -25,6 +26,7 @@
       DISTANCE = pageURL.searchParams.get("distance");
     }
     require([
+      "esri/core/watchUtils",
       "esri/Map",
       "esri/Graphic",
       "esri/WebScene",
@@ -35,6 +37,7 @@
       "esri/geometry/geometryEngine",
       "esri/geometry/support/geodesicUtils"
     ], function(
+      watchUtils,
       Map,
       Graphic,
       WebScene,
@@ -83,34 +86,34 @@
       view.when().then(function() {
         const layer1 = view.map.layers.find(layer => layer.title === "Route around the world");
         view.whenLayerView(layer1).then(function(layerView) {
-          layerView.watch("updating", function(val) {
-            if (!val) { // wait for the layer view to finish updating
-              layerView.queryFeatures().then(function(results) {
-                var firstHalf = results.features[0];
-                let polyline = firstHalf.geometry;
-                try {
-                  const ptBuff = geometryEngine.geodesicBuffer(
-                    START,
-                    DISTANCE,
-                    "kilometers"
-                  );
-                  const cutter = new Polyline({
-                    paths: ptBuff.rings[0],
-                    spatialReference: ptBuff.spatialReference
-                  });
-                  const lineSoFar = geometryEngine.cut(polyline, cutter);
-                  const graphicSoFar = new Graphic({
-                    geometry: lineSoFar[1],
-                    symbol: lineSymbol
-                  });
-                  view.graphics.add(graphicSoFar);
-                  view.goTo(graphicSoFar);
-                } catch (error) {
-                  console.log(error);
-                }
-              });
-            }
-          });
+          watchUtils.whenFalseOnce(layerView, "updating", createDistanceLine);
+
+          function createDistanceLine() {
+            layerView.queryFeatures().then(function(results) {
+              var firstHalf = results.features[0];
+              let polyline = firstHalf.geometry;
+              try {
+                const ptBuff = geometryEngine.geodesicBuffer(
+                  START,
+                  DISTANCE,
+                  "kilometers"
+                );
+                const cutter = new Polyline({
+                  paths: ptBuff.rings[0],
+                  spatialReference: ptBuff.spatialReference
+                });
+                const lineSoFar = geometryEngine.cut(polyline, cutter);
+                const graphicSoFar = new Graphic({
+                  geometry: lineSoFar[1],
+                  symbol: lineSymbol
+                });
+                view.graphics.add(graphicSoFar);
+                view.goTo(graphicSoFar);
+              } catch (error) {
+                console.log(error);
+              }
+            });
+          }
         });
       });
     });
