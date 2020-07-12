@@ -23,7 +23,7 @@
     const pageURL = new URL(href);
     let DISTANCE = 100; // km so far, change to like 1 when not testing...
     if (pageURL.searchParams.get("distance")) {
-      DISTANCE = pageURL.searchParams.get("distance");
+      DISTANCE = pageURL.searchParams.get("distance"); // testing only
     }
     require([
       "esri/core/watchUtils",
@@ -56,20 +56,19 @@
         }
       });
       var FL4sum = new FeatureLayer({
-        url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Summarize___Tracks_within_World_Countries_(Generalized)/FeatureServer/0'
+        url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Fun_Run_(Dashboard_and_Stats_View)/FeatureServer/1'
       });
       FL4sum.load().then(function(statlayer) {
         const statQuery = statlayer.createQuery();
         statQuery.outStatistics = [
           {
-            onStatisticField: "SUM_Track_Length_KM",
-            outStatisticsFieldName: "FOO",
+            onStatisticField: "Track_Length_KM",
             statisticType: "sum"
           }
         ];
         statlayer.queryFeatures(statQuery)
         .then(function (result) {
-          DISTANCE = result.features[0].attributes.SUM_SUM_Track_Length_KM || 1;
+          DISTANCE = result.features[0].attributes.SUM_Track_Length_KM || 1;
         })
         .catch(function (error) {
           console.log("OOPS", error) 
