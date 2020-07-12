@@ -21,7 +21,7 @@
   <script>
     const href = window.location.href;
     const pageURL = new URL(href);
-    let DISTANCE = 900; // km so far, change to like 1 when not testing...
+    let DISTANCE = 100; // km so far, change to like 1 when not testing...
     if (pageURL.searchParams.get("distance")) {
       DISTANCE = pageURL.searchParams.get("distance");
     }
@@ -30,6 +30,7 @@
       "esri/Map",
       "esri/Graphic",
       "esri/WebScene",
+      "esri/layers/FeatureLayer",
       "esri/views/SceneView",
       "esri/geometry/Point",
       "esri/geometry/Polyline",
@@ -41,6 +42,7 @@
       Map,
       Graphic,
       WebScene,
+      FeatureLayer,
       SceneView,
       Point,
       Polyline,
@@ -53,6 +55,26 @@
           id: "13ee3fce1c64408b98d3f8a4756a8a52"
         }
       });
+      var FL4sum = new FeatureLayer({
+        url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Summarize___Tracks_within_World_Countries_(Generalized)/FeatureServer/0'
+      });
+      FL4sum.load().then(function(statlayer) {
+        const statQuery = statlayer.createQuery();
+        statQuery.outStatistics = [
+          {
+            onStatisticField: "SUM_Track_Length_KM",
+            outStatisticsFieldName: "FOO",
+            statisticType: "sum"
+          }
+        ];
+        statlayer.queryFeatures(statQuery)
+        .then(function (result) {
+          DISTANCE = result.features[0].attributes.SUM_SUM_Track_Length_KM || 1;
+        })
+        .catch(function (error) {
+          console.log("OOPS", error) 
+        })
+      })
       var view = new SceneView({
         container: "viewDiv",
         map: scene,
@@ -93,6 +115,7 @@
               var firstHalf = results.features[0];
               let polyline = firstHalf.geometry;
               try {
+                console.log("Buffering for", DISTANCE, "km");
                 const ptBuff = geometryEngine.geodesicBuffer(
                   START,
                   DISTANCE,
@@ -108,7 +131,6 @@
                   symbol: lineSymbol
                 });
                 view.graphics.add(graphicSoFar);
-                //view.goTo(graphicSoFar);
                 //view.goTo(lineSoFar[1].extent.expand(3));
                 //view.goTo(lineSoFar[1].extent.center);
                 //view.goTo( {zoom: view.zoom + 1});
