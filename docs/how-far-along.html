@@ -58,26 +58,51 @@
       var FL4sum = new FeatureLayer({
         url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Fun_Run_(Dashboard_and_Stats_View)/FeatureServer/1'
       });
+      let ESRI;
+      createStartPoints();
       FL4sum.load().then(function(statlayer) {
         const statQuery = statlayer.createQuery();
-        statQuery.outStatistics = [
-          {
-            onStatisticField: "Track_Length_KM",
-            statisticType: "sum"
-          }
-        ];
+        statQuery.outStatistics = [{
+          onStatisticField: "Track_Length_KM",
+          statisticType: "sum"
+        }];
         statlayer.queryFeatures(statQuery)
-        .then(function (result) {
-          DISTANCE = result.features[0].attributes.SUM_Track_Length_KM || 1;
-        })
-        .catch(function (error) {
-          console.log("OOPS", error) 
-        })
+          .then(function(result) {
+            DISTANCE = result.features[0].attributes.SUM_Track_Length_KM || 1;
+            const CURRENT = geodesicUtils.pointFromDistance(
+              ESRI,
+              DISTANCE * 1000,
+              90
+            );
+            console.log(`Current distance of ${DISTANCE} km takes us to ${CURRENT.latitude}, ${CURRENT.longitude}`);
+            const lineSoFar = new Polyline({
+              paths: [
+                [
+                  [ESRI.x, ESRI.y],
+                  [CURRENT.x, CURRENT.y]
+                ]
+              ],
+              spatialReference: view.spatialReference // WGS for SceneView
+            });
+            lineSoFarDensified = geodesicUtils.geodesicDensify(lineSoFar, 20000);
+            const graphicSoFar = new Graphic({
+              geometry: lineSoFarDensified,
+              symbol: {
+                type: "simple-line",
+                color: [252, 199, 69, 1], // "#fcc745",
+                //cap: "round",
+                width: 25
+              }
+            });
+            view.graphics.add(graphicSoFar);
+          })
+          .catch(function(error) {
+            console.log("OOPS", error)
+          })
       })
       var view = new SceneView({
         container: "viewDiv",
         map: scene,
-        //center: [-110, 20],
         alphaCompositingEnabled: true,
         environment: {
           background: {
@@ -91,55 +116,16 @@
           components: ["attribution"]
         }
       });
-      const START = new Point({
-        x: -13046164,
-        y: 4036335,
-        spatialReference: new SpatialReference({
-          wkid: 102100
-        })
-      });
-      const lineSymbol = {
-        type: "simple-line",
-        color: "#fcc745",
-        cap: "round",
-        width: 20
-      }
-      view.when().then(function() {
-        const layer1 = view.map.layers.find(layer => layer.title === "Route around the world");
-        view.whenLayerView(layer1).then(function(layerView) {
-          watchUtils.whenFalseOnce(layerView, "updating", createDistanceLine);
 
-          function createDistanceLine() {
-            layerView.queryFeatures().then(function(results) {
-              var firstHalf = results.features[0];
-              let polyline = firstHalf.geometry;
-              try {
-                console.log("Buffering for", DISTANCE, "km");
-                const ptBuff = geometryEngine.geodesicBuffer(
-                  START,
-                  DISTANCE,
-                  "kilometers"
-                );
-                const cutter = new Polyline({
-                  paths: ptBuff.rings[0],
-                  spatialReference: ptBuff.spatialReference
-                });
-                const lineSoFar = geometryEngine.cut(polyline, cutter);
-                const graphicSoFar = new Graphic({
-                  geometry: lineSoFar[1],
-                  symbol: lineSymbol
-                });
-                view.graphics.add(graphicSoFar);
-                //view.goTo(lineSoFar[1].extent.expand(3));
-                //view.goTo(lineSoFar[1].extent.center);
-                //view.goTo( {zoom: view.zoom + 1});
-              } catch (error) {
-                console.log(error);
-              }
-            });
-          }
+      function createStartPoints() {
+        ESRI = new Point({ // hardcoded Redlands to save time
+          x: -117.19569255061943,
+          y: 34.056084325030348,
+          spatialReference: new SpatialReference({
+            wkid: 4326
+          })
         });
-      });
+      }
     });
   </script>
 </head>
