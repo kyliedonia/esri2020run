@@ -12,21 +12,21 @@
       margin: 0;
       height: 100%;
       width: 100%;
+      background: #131224;
+    }
+
+    .esri-attribution {
+      color: #dddddd !important;
+      background-color: rgba(19, 18, 36, 0.7) !important;
     }
   </style>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.16/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.16/"></script>
-
   <script>
-    const href = window.location.href;
-    const pageURL = new URL(href);
-    let DISTANCE = 100; // km so far, change to like 1 when not testing...
-    if (pageURL.searchParams.get("distance")) {
-      DISTANCE = pageURL.searchParams.get("distance"); // testing only
-    }
     require([
       "esri/core/watchUtils",
+      "esri/Color",
       "esri/Map",
       "esri/Graphic",
       "esri/WebScene",
@@ -39,6 +39,7 @@
       "esri/geometry/support/geodesicUtils"
     ], function(
       watchUtils,
+      Color,
       Map,
       Graphic,
       WebScene,
@@ -50,59 +51,20 @@
       geometryEngine,
       geodesicUtils
     ) {
-      var scene = new WebScene({
-        portalItem: {
-          id: "13ee3fce1c64408b98d3f8a4756a8a52"
-        }
+      const ESRI = new Point({
+        x: -117.19569255061943,
+        y: 34.056084325030348,
+        spatialReference: new SpatialReference({
+          wkid: 4326
+        })
       });
-      var FL4sum = new FeatureLayer({
-        url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Fun_Run_(Dashboard_and_Stats_View)/FeatureServer/1'
-      });
-      let ESRI;
-      createStartPoints();
-      FL4sum.load().then(function(statlayer) {
-        const statQuery = statlayer.createQuery();
-        statQuery.outStatistics = [{
-          onStatisticField: "Track_Length_KM",
-          statisticType: "sum"
-        }];
-        statlayer.queryFeatures(statQuery)
-          .then(function(result) {
-            DISTANCE = result.features[0].attributes.SUM_Track_Length_KM || 1;
-            const CURRENT = geodesicUtils.pointFromDistance(
-              ESRI,
-              DISTANCE * 1000,
-              90
-            );
-            console.log(`Current distance of ${DISTANCE} km takes us to ${CURRENT.latitude}, ${CURRENT.longitude}`);
-            const lineSoFar = new Polyline({
-              paths: [
-                [
-                  [ESRI.x, ESRI.y],
-                  [CURRENT.x, CURRENT.y]
-                ]
-              ],
-              spatialReference: view.spatialReference // WGS for SceneView
-            });
-            lineSoFarDensified = geodesicUtils.geodesicDensify(lineSoFar, 20000);
-            const graphicSoFar = new Graphic({
-              geometry: lineSoFarDensified,
-              symbol: {
-                type: "simple-line",
-                color: [252, 199, 69, 1], // "#fcc745",
-                //cap: "round",
-                width: 20
-              }
-            });
-            view.graphics.add(graphicSoFar);
-          })
-          .catch(function(error) {
-            console.log("OOPS", error)
-          })
-      })
-      var view = new SceneView({
+      const view = new SceneView({
         container: "viewDiv",
-        map: scene,
+        map: new WebScene({
+          portalItem: {
+            id: "13ee3fce1c64408b98d3f8a4756a8a52"
+          }
+        }),
         alphaCompositingEnabled: true,
         environment: {
           background: {
@@ -116,16 +78,165 @@
           components: ["attribution"]
         }
       });
-
-      function createStartPoints() {
-        ESRI = new Point({ // hardcoded Redlands to save time
-          x: -117.19569255061943,
-          y: 34.056084325030348,
-          spatialReference: new SpatialReference({
-            wkid: 4326
-          })
+      view.when(() => {
+        watchUtils.whenFalseOnce(view, 'updating', () => {
+          const fillColor = new Color('rgba(244,195,77, 0.7)');
+          const centerColor = new Color('rgba(255,255,255,0.8)');
+          const textColor = new Color('rgb(255,255,255)');
+          const textHaloColor = new Color('rgb(244,195,77)');
+          const createLocationSymbol = (text, larger) => {
+            return {
+              type: "point-3d",
+              symbolLayers: [{
+                type: "text",
+                text: text,
+                material: {
+                  color: textColor
+                },
+                halo: {
+                  color: textHaloColor,
+                  size: 1.1
+                },
+                size: larger ? 42.0 : 21.0
+              }],
+              callout: {
+                type: "line",
+                size: 1.2,
+                color: centerColor
+              },
+              verticalOffset: {
+                screenLength: 250,
+                maxWorldLength: 800000,
+                minWorldLength: 80000
+              }
+            };
+          }
+          const graphicSoFar = new Graphic({
+            symbol: {
+              type: "line-3d",
+              symbolLayers: [{
+                  type: "line",
+                  size: 30.0,
+                  material: {
+                    color: fillColor
+                  },
+                  cap: "round",
+                  join: "round"
+                },
+                {
+                  type: "line",
+                  size: 15.0,
+                  material: {
+                    color: Color.blendColors(fillColor, centerColor, 0.25)
+                  },
+                  cap: "round",
+                  join: "round"
+                },
+                {
+                  type: "line",
+                  size: 5.0,
+                  material: {
+                    color: Color.blendColors(fillColor, centerColor, 0.5)
+                  },
+                  cap: "round",
+                  join: "round"
+                },
+                {
+                  type: "line",
+                  size: 1.5,
+                  material: {
+                    color: centerColor
+                  },
+                  cap: "round",
+                  join: "round"
+                }
+              ]
+            }
+          });
+          const locationSoFar = new Graphic({
+            symbol: createLocationSymbol(`0 km`)
+          });
+          view.graphics.addMany([graphicSoFar, locationSoFar]);
+          var FL4sum = new FeatureLayer({
+            url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/ArcGIS/rest/services/Fun_Run_(Dashboard_and_Stats_View)/FeatureServer/1'
+          });
+          FL4sum.load().then(statlayer => {
+            const statQuery = statlayer.createQuery();
+            statQuery.outStatistics = [{
+              onStatisticField: "Track_Length_KM",
+              statisticType: "sum"
+            }];
+            statlayer.queryFeatures(statQuery).then(function(result) {
+              const DISTANCE = result.features[0].attributes.SUM_Track_Length_KM || 1.0;
+              const createAlong = distance => {
+                const CURRENT = geodesicUtils.pointFromDistance(ESRI, distance * 1000.0, 90.0);
+                console.log(`Current distance of ${DISTANCE} km takes us to ${CURRENT.latitude}, ${CURRENT.longitude}`);
+                const lineSoFar = new Polyline({
+                  paths: [
+                    [
+                      [ESRI.x, ESRI.y],
+                      [CURRENT.x, CURRENT.y]
+                    ]
+                  ],
+                  spatialReference: {
+                    wkid: 4326
+                  }
+                });
+                return {
+                  along: geodesicUtils.geodesicDensify(lineSoFar, 20000.0),
+                  location: CURRENT
+                };
+              };
+              const viewScale = view.scale;
+              const integer = new Intl.NumberFormat('default', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              });
+              const updateAlong = (distance, larger) => {
+                const alongInfo = createAlong(distance);
+                graphicSoFar.geometry = alongInfo.along;
+                locationSoFar.geometry = alongInfo.location;
+                locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km`, larger);
+                return view.goTo({
+                  target: locationSoFar.geometry,
+                  scale: viewScale,
+                  tilt: 45.0
+                }, {
+                  animate: false
+                }).catch(error => {
+                  console.log("error:", error)
+                });
+              }
+              let step = 50.0;
+              let along = step;
+              const displayAlong = () => {
+                if (along >= DISTANCE) {
+                  updateAlong(DISTANCE, true);
+                  setTimeout(() => {
+                    console.log("11");
+                    along = step;
+                    requestAnimationFrame(displayAlong);
+                  }, 2500);
+                } else {
+                  updateAlong(along);
+                  console.log("22");
+                  setTimeout(() => {
+                    along += (step + (Math.random() * step));
+                    requestAnimationFrame(displayAlong);
+                  }, 1000);
+                }
+              };
+              const urlParams = new URLSearchParams(window.location.search);
+              const animate = urlParams.get('animate') || true;
+              if (animate && (animate === "true") && (view.width > 480)) {
+                displayAlong();
+              } else {
+                updateAlong(DISTANCE, false);
+              }
+            });
+          }).catch(console.error);
         });
-      }
+      });
     });
   </script>
 </head>
