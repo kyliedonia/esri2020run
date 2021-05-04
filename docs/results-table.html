@@ -160,9 +160,8 @@
               item.cellValueFormatFunction = function(params) {
                 participant = params.value;
                 if (participant == null)
-                  participant = "Unknown"
+                  participant = "Unknown";
                 return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + participant + "</a>";
-                //return params.value
               };
             } else if (item.path === "Mode") {
               item.cellValueFormatFunction = function(params) {
