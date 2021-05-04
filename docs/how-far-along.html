@@ -166,7 +166,8 @@
             statQuery.outStatistics = [{
               onStatisticField: "distance_km",
               //onStatisticField: "Track_Length_KM",
-              statisticType: "sum"
+              statisticType: "sum",
+              outStatisticFieldName: "SUM_distance_km"
             }];
             statlayer.queryFeatures(statQuery).then(function(result) {
               const DISTANCE = result.features[0].attributes.SUM_distance_km || 1.0;
