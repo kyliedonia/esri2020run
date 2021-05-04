@@ -179,7 +179,7 @@
             statQuery.outStatistics = [{
               onStatisticField: "distance_km",
               statisticType: "sum",
-              outStatisticFieldName: "SUM_distance_km
+              outStatisticFieldName: "SUM_distance_km"
             }];
             statlayer.queryFeatures(statQuery).then(function(result) {
               let DISTANCE = result.features[0].attributes.SUM_distance_km || 1;
