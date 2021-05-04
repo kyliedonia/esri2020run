@@ -28,12 +28,6 @@
     const ANIMATIONSPEED = 5; // How fast to grow the line (in ms for each frame)
     const href = window.location.href;
     const pageURL = new URL(href);
-    let TESTDISTANCE = 35000; // 40065;
-    if (pageURL.searchParams.get("distance")) {
-      TESTDISTANCE = pageURL.searchParams.get("distance");
-      console.log("TESTDISTANCE:", TESTDISTANCE)
-    }
-    const TESTLABEL = true;
     require([
       "esri/core/watchUtils",
       "esri/Color",
@@ -166,11 +160,9 @@
           const locationSoFar = new Graphic({
             symbol: createLocationSymbol(`0 km`)
           });
-          if (TESTLABEL) {
-            view.graphics.addMany([graphicSoFar, locationSoFar]);
-          } else {
-            view.graphics.addMany([graphicSoFar, locationSoFar]);
-          }
+          
+          view.graphics.addMany([graphicSoFar, locationSoFar]);
+          
           var FL4sum = new FeatureLayer({
             url: 'https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1'
           });
@@ -183,10 +175,6 @@
             }];
             statlayer.queryFeatures(statQuery).then(function(result) {
               let DISTANCE = result.features[0].attributes.SUM_distance_km || 1;
-              if (TESTDISTANCE) {
-                console.log("testing hardcoded distance:", TESTDISTANCE);
-                DISTANCE = TESTDISTANCE;
-              }
               const createAlong = distance => {
                 let path = [
                   [ESRI.x, ESRI.y]
