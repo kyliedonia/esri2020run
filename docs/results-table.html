@@ -25,11 +25,16 @@
     .units {
       width: 220px;
       right: 0px;
-      float: right;
+      float: left;
+    }
+    .division {
+      width: 220px;
+      right: 0px;
+      float: left;
     }
 
-    #actions {
-      padding: 5px;
+    .actions {
+      padding: 5px 10px;
     }
 
     .container {
@@ -61,7 +66,7 @@
       const query = new Query({
         returnGeometry: false,
         outFields: ["speed_km"],
-        where: "distance_km >= 4.9",
+        where: "Mode='onFoot'",
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
       });
@@ -110,6 +115,11 @@
             name: "pace_per_mi",
             label: "Pace (min/mi)",
             visible: false
+          },
+          {
+            name: "Mode",
+            label: "Mode",
+            visible: true
           }
         ],
         container: document.getElementById("tableDiv")
@@ -150,9 +160,16 @@
               item.cellValueFormatFunction = function(params) {
                 participant = params.value;
                 if (participant == null)
-                  participant = "Unknown";
+                  participant = "Unknown"
                 return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + participant + "</a>";
-                //return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + params.value.toString() + "</a>";
+                //return params.value
+              };
+            } else if (item.path === "Mode") {
+              item.cellValueFormatFunction = function(params) {
+                if (params.value === 'onFoot')
+                  return "Run/Walk";
+                else
+                  return "Bike";
               };
             } else if (item.path === "distance_km" || item.path === "distance_mi") {
               item.cellValueFormatFunction = function(params) {
@@ -179,6 +196,8 @@
         }
       });
       // done formatting columns
+      const footDivBtn = document.getElementById("footDivision");
+      const wheelsDivBtn = document.getElementById("wheelsDivision");
       const fastestBtn = document.getElementById("fastest");
       const longestBtn = document.getElementById("longest");
       //const timeTotalBtn = document.getElementById("timeTotal");
@@ -186,6 +205,8 @@
       const metricUnitsBtn = document.getElementById("metricUnits");
       const imperialUnitsBtn = document.getElementById("imperialUnits");
       // Wire up button click event listeners
+      footDivBtn.addEventListener("click", changeDivision);
+      wheelsDivBtn.addEventListener("click", changeDivision);
       //fastestBtn.addEventListener("click", showFastestResults);
       //longestBtn.addEventListener("click", showLongestResults);
       //timeTotalBtn.addEventListener("click", showTimeTotalResults);
@@ -250,12 +271,29 @@
           featureTable.showColumn("pace_per_mi");
         }
       }
+      
+      function changeDivision() {
+        if (wheelsDivBtn.checked) {
+        
+        } else {
+          
+        }
+      }
     });
   </script>
 </head>
 
 <body>
-  <div id="actions" class="esri-widget units">
+  <div id="divActions" class="esri-widget division actions">    
+    <fieldset class="radio-group">
+      <legend class="radio-group-title">Division</legend>
+      <input type="radio" id="footDivision" name="division" value="onFoot" checked>
+      <label for="footDivision">Run/Walk</label>
+      <input type="radio" id="wheelsDivision" name="division" value="onWheels">
+      <label for="wheelsDivision">Bike</label>
+    </fieldset>
+  </div>  
+  <div id="unitActions" class="esri-widget units actions">
     <fieldset class="radio-group">
       <legend class="radio-group-title">Units</legend>
       <input type="radio" id="metricUnits" name="units" value="km" checked>
