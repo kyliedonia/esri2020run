@@ -148,7 +148,11 @@
             }
             if (item.path === "nickname") {
               item.cellValueFormatFunction = function(params) {
-                return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + params.value.toString() + "</a>";
+                participant = params.value;
+                if (participant == null)
+                  participant = "Unknown";
+                return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + participant + "</a>";
+                //return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + params.value.toString() + "</a>";
               };
             } else if (item.path === "distance_km" || item.path === "distance_mi") {
               item.cellValueFormatFunction = function(params) {
