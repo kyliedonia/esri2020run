@@ -94,7 +94,7 @@
           },
           {
             name: "speed_km",
-            label: "Speed (KPH)"
+            label: "Speed (km/h)"
           },
           {
             name: "pace_per_km",
@@ -134,6 +134,7 @@
           if (items[items.length - 1].path === "virtual-column") {
             return;
           }
+          // Add ranking
           featureTable.columns.add(
             new Column({
               store: featureTable.viewModel.store,
@@ -160,7 +161,7 @@
               item.cellValueFormatFunction = function(params) {
                 participant = params.value;
                 if (participant == null)
-                  participant = "Unknown";
+                  participant = "Unknown"
                 return "<a target='_blank' href='https://apl.bd.esri.com/UC2021Run/index.html?globalID=" + params.rowData.item.feature.attributes.GlobalID + "'>" + participant + "</a>";
               };
             } else if (item.path === "Mode") {
@@ -215,7 +216,6 @@
       // Fires when "fastest" button is clicked
       function showFastestResults() {
         // Sorts the table by speed and limits to runs over 5km
-        /////TODO featureLayer.definitionExpression = "Track_Length_KM >= 5";
         if (metricUnitsBtn.checked) {
           featureTable.sortColumn("speed_km", "desc");
         } else {
