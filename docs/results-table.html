@@ -61,17 +61,18 @@
       });
       featureLayer.outFields = ["*"];
       featureLayer.title = "Results";
+      
       // RANK SECTION 1 START
       let sortedSpeeds = [];
-      const query = new Query({
+      const queryRun = new Query({
         returnGeometry: false,
         outFields: ["speed_km"],
-        where: "Mode='onFoot'",
+        where: "distance_km > 4.9 AND Mode='onFoot'",
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
       });
       featureLayer.load().then(function() {
-        featureLayer.queryFeatures(query).then(function(results) {
+        featureLayer.queryFeatures(queryRun).then(function(results) {
           const features = results.features;
           sortedSpeeds = features.map(function(feature) {
             return feature.attributes["speed_km"];
