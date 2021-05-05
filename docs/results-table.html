@@ -61,6 +61,7 @@
       });
       featureLayer.outFields = ["*"];
       featureLayer.title = "Results";
+      featureLayer.definitionExpression = "Mode = 'onFoot'";
       
       // RANK SECTION 1 START
       let sortedSpeeds = [];
@@ -70,7 +71,7 @@
         where: "distance_km > 4.9 AND Mode='onFoot'",
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
-      });
+      });      
       featureLayer.load().then(function() {
         featureLayer.queryFeatures(queryRun).then(function(results) {
           const features = results.features;
@@ -79,6 +80,14 @@
           });
         });
       });
+      const queryBike = new Query({
+        returnGeometry: false,
+        outFields: ["speed_km"],
+        where: "distance_km > 19.9 AND Mode='onWheels'",
+        cacheHint: true,
+        orderByFields: ["speed_km DESC"]
+      });
+      
       // RANK SECTION 1 END
       // Create the feature table
       const featureTable = new FeatureTable({
@@ -120,7 +129,7 @@
           {
             name: "Mode",
             label: "Mode",
-            visible: true
+            visible: false
           }
         ],
         container: document.getElementById("tableDiv")
@@ -136,17 +145,26 @@
             return;
           }
           // Add ranking
+          var rankHeader = "Place (5K+)";
+//          var query = runQuery;
+          if (wheelsDivBtn.checked) {
+            rankHeader = "Place (20k+)"
+//            query = bikeQuery;
+          }
           featureTable.columns.add(
             new Column({
               store: featureTable.viewModel.store,
               sortable: false,
               path: "virtual-column",
-              header: "Place (5K+)",
+              header: rankHeader,
               getCellValue: function(columnElement, rowData) {
                 const item = rowData.item;
-                const index = sortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
-                if (item.feature.attributes["distance_km"] >= 4.9) {
-                  return index !== undefined ? (index + 1).toString() : "no"; //index + 1 : "";
+                const runIndex = sortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
+                const bikeIndex = sortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
+                if (item.feature.attributes["distance_km"] >= 4.9 && item.feature.attributes["Mode"] === "onFoot") {
+                  return runIndex !== undefined ? (runIndex + 1).toString() : "no"; 
+                } else if (item.feature.attributes["distance_km"] >= 19.9 && item.feature.attributes["Mode"] === "onWheels") {
+                  return bikeIndex !== undefined ? (bikeIndex + 1000).toString() : "no"; 
                 } else {
                   return "n/a";
                 }
@@ -274,9 +292,9 @@
       
       function changeDivision() {
         if (wheelsDivBtn.checked) {
-        
+          featureLayer.definitionExpression = "Mode = 'onWheels'";
         } else {
-          
+          featureLayer.definitionExpression = "Mode = 'onFoot'";
         }
       }
     });
