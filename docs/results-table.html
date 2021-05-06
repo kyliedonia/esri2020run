@@ -6,8 +6,8 @@
   <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
   <title>Results - Esri UC Virtual Run/Walk/Bike 2021</title>
 
-  <link rel="stylesheet" href="https://js.arcgis.com/4.16/esri/themes/light/main.css" />
-  <script src="https://js.arcgis.com/4.16/"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.19/"></script>
 
   <style>
     html,
@@ -59,8 +59,14 @@
       const runFeatureLayer = new FeatureLayer({
         url: "https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1",
         outFields: ["*"],
-        title: "Results",
+        title: "Results RUN",
         definitionExpression: "Mode = 'onFoot'"
+      });
+      const bikeFeatureLayer = new FeatureLayer({
+        url: "https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1",
+        outFields: ["*"],
+        title: "Results BIKE",
+        definitionExpression: "Mode = 'onWheels'"
       });
       
       // RANK SECTION 1 START
@@ -136,8 +142,9 @@
         ]
       const runFeatureTable = new FeatureTable({
         layer: runFeatureLayer,
+        container: document.getElementById("tableDiv"),
         fieldConfigs: fieldsForTable,
-        container: document.getElementById("tableDiv")
+        visibleElements: {header: false, menu: false, selectionColumn: false}
       });
       // Format the columns of results
       watchUtils.watch(runFeatureTable, "columns.length", function(length) {
