@@ -12,7 +12,7 @@
       margin: 0;
       height: 100%;
       width: 100%;
-      background: #131224;
+      background: #0a0830;  
     }
 
     .esri-attribution {
@@ -84,10 +84,10 @@
       });
       view.when(() => {
         watchUtils.whenFalseOnce(view, 'updating', () => {
-          const fillColor = new Color('rgba(244,195,77, 0.7)');
+          const fillColor = new Color('rgba(246,114,89, 0.7)');
           const centerColor = new Color('rgba(255,255,255,0.8)');
           const textColor = new Color('rgb(255,255,255)');
-          const textHaloColor = new Color('rgb(244,195,77)');
+          const textHaloColor = new Color('rgb(246,114,89)');
           const createLocationSymbol = (text, larger) => {
             return {
               type: "point-3d",
