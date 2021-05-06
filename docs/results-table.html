@@ -140,7 +140,7 @@
         container: document.getElementById("tableDiv")
       });
       // Format the columns of results
-      watchUtils.watch(featureTable, "columns.length", function(length) {
+      watchUtils.watch(runFeatureTable, "columns.length", function(length) {
         if (length) {
           // RANK SECTION 2 START
           const items = runFeatureTable.columns.items;
@@ -154,7 +154,7 @@
           if (wheelsDivBtn.checked) {
             rankHeader = "Place (20k+)";
           }
-          featureTable.columns.add(
+          runFeatureTable.columns.add(
             new Column({
               store: runFeatureTable.viewModel.store,
               sortable: false,
@@ -239,18 +239,18 @@
       function showFastestResults() {
         // Sorts the table by speed and limits to runs over 5km
         if (metricUnitsBtn.checked) {
-          featureTable.sortColumn("speed_km", "desc");
+          runFeatureTable.sortColumn("speed_km", "desc");
         } else {
-          featureTable.sortColumn("speed_mi", "desc");
+          runFeatureTable.sortColumn("speed_mi", "desc");
         }
       }
       // Fires when "longest" button is clicked
       function showLongestResults() {
         // Sorts the table by distance
         if (metricUnitsBtn.checked) {
-          featureTable.sortColumn("distance_km", "desc");
+          runFeatureTable.sortColumn("distance_km", "desc");
         } else {
-          featureTable.sortColumn("distance_mi", "desc");
+          runFeatureTable.sortColumn("distance_mi", "desc");
         }
       }
       // Fires when "timeTotal" button is clicked
@@ -276,19 +276,19 @@
       //  - Show distance, speed, and pace in mi, elevation in ft
       function changeUnits() {
         if (metricUnitsBtn.checked) {
-          featureTable.showColumn("distance_km");
-          featureTable.showColumn("speed_km");
-          featureTable.showColumn("pace_per_km");
-          featureTable.hideColumn("distance_mi");
-          featureTable.hideColumn("speed_mi");
-          featureTable.hideColumn("pace_per_mi");
+          runFeatureTable.showColumn("distance_km");
+          runFeatureTable.showColumn("speed_km");
+          runFeatureTable.showColumn("pace_per_km");
+          runFeatureTable.hideColumn("distance_mi");
+          runFeatureTable.hideColumn("speed_mi");
+          runFeatureTable.hideColumn("pace_per_mi");
         } else {
-          featureTable.hideColumn("distance_km");
-          featureTable.hideColumn("speed_km");
-          featureTable.hideColumn("pace_per_km");
-          featureTable.showColumn("distance_mi");
-          featureTable.showColumn("speed_mi");
-          featureTable.showColumn("pace_per_mi");
+          runFeatureTable.hideColumn("distance_km");
+          runFeatureTable.hideColumn("speed_km");
+          runFeatureTable.hideColumn("pace_per_km");
+          runFeatureTable.showColumn("distance_mi");
+          runFeatureTable.showColumn("speed_mi");
+          runFeatureTable.showColumn("pace_per_mi");
         }
       }
       
