@@ -57,11 +57,11 @@
       Column
     ) {
       const runFeatureLayer = new FeatureLayer({
-        url: "https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1"
+        url: "https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1",
+        outFields: ["*"],
+        title: "Results",
+        definitionExpression: "Mode = 'onFoot'"
       });
-      runFeatureLayer.outFields = ["*"];
-      runFeatureLayer.title = "Results";
-      runFeatureLayer.definitionExpression = "Mode = 'onFoot'";
       
       // RANK SECTION 1 START
       let sortedSpeeds = [];
@@ -90,10 +90,7 @@
       
       // RANK SECTION 1 END
       // Create the feature table
-      const runFeatureTable = new FeatureTable({
-        layer: runFeatureLayer,
-        // Autocast the FieldColumnConfigs
-        fieldConfigs: [{
+      const fieldsForTable = [{
             name: "nickname",
             label: "Participant"
           },
@@ -131,7 +128,10 @@
             label: "Mode",
             visible: false
           }
-        ],
+        ]
+      const runFeatureTable = new FeatureTable({
+        layer: runFeatureLayer,
+        fieldConfigs: fieldsForTable,
         container: document.getElementById("tableDiv")
       });
       // Format the columns of results
