@@ -56,12 +56,12 @@
       FeatureTable,
       Column
     ) {
-      const featureLayer = new FeatureLayer({
+      const runFeatureLayer = new FeatureLayer({
         url: "https://services2.arcgis.com/AhLa5Lu7BoubUElN/arcgis/rest/services/Fun_Run_dashboard_568bd7265ea34dd49b20ab1155aca00d/FeatureServer/1"
       });
-      featureLayer.outFields = ["*"];
-      featureLayer.title = "Results";
-      featureLayer.definitionExpression = "Mode = 'onFoot'";
+      runFeatureLayer.outFields = ["*"];
+      runFeatureLayer.title = "Results";
+      runFeatureLayer.definitionExpression = "Mode = 'onFoot'";
       
       // RANK SECTION 1 START
       let sortedSpeeds = [];
@@ -72,10 +72,10 @@
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
       });      
-      featureLayer.load().then(function() {
-        featureLayer.queryFeatures(queryRun).then(function(results) {
-          const features = results.features;
-          sortedSpeeds = features.map(function(feature) {
+      runFeatureLayer.load().then(function() {
+        runFeatureLayer.queryFeatures(queryRun).then(function(runResults) {
+          const runFeatures = runResults.features;
+          sortedSpeeds = runFeatures.map(function(feature) {
             return feature.attributes["speed_km"];
           });
         });
@@ -90,8 +90,8 @@
       
       // RANK SECTION 1 END
       // Create the feature table
-      const featureTable = new FeatureTable({
-        layer: featureLayer,
+      const runFeatureTable = new FeatureTable({
+        layer: runFeatureLayer,
         // Autocast the FieldColumnConfigs
         fieldConfigs: [{
             name: "nickname",
@@ -138,7 +138,7 @@
       watchUtils.watch(featureTable, "columns.length", function(length) {
         if (length) {
           // RANK SECTION 2 START
-          const items = featureTable.columns.items;
+          const items = runFeatureTable.columns.items;
           // Don't add virtual column a second time
           // Prevents infinite loop
           if (items[items.length - 1].path === "virtual-column") {
@@ -146,14 +146,12 @@
           }
           // Add ranking
           var rankHeader = "Place (5K+)";
-//          var query = runQuery;
           if (wheelsDivBtn.checked) {
-            rankHeader = "Place (20k+)"
-//            query = bikeQuery;
+            rankHeader = "Place (20k+)";
           }
           featureTable.columns.add(
             new Column({
-              store: featureTable.viewModel.store,
+              store: runFeatureTable.viewModel.store,
               sortable: false,
               path: "virtual-column",
               header: rankHeader,
@@ -172,7 +170,7 @@
             })
           );
           // RANK SECTION 2 END
-          featureTable.columns.items.forEach((item) => {
+          runFeatureTable.columns.items.forEach((item) => {
             if (item.path !== "nickname") {
               item.textAlign = "end";
             }
@@ -244,7 +242,6 @@
       // Fires when "longest" button is clicked
       function showLongestResults() {
         // Sorts the table by distance
-        /////TODO featureLayer.definitionExpression = "*";
         if (metricUnitsBtn.checked) {
           featureTable.sortColumn("distance_km", "desc");
         } else {
@@ -254,7 +251,7 @@
       // Fires when "timeTotal" button is clicked
       function showTimeTotalResults() {
         // Sorts the table by distance
-        view.goTo(featureLayer.fullExtent).catch(function(error) {
+        view.goTo(runFeatureLayer.fullExtent).catch(function(error) {
           if (error.name != "AbortError") {
             console.error(error);
           }
@@ -263,7 +260,7 @@
       // Fires when "distanceTotal" button is clicked
       function showDistanceTotalResults() {
         // Sorts the table by distance
-        view.goTo(featureLayer.fullExtent).catch(function(error) {
+        view.goTo(runFeatureLayer.fullExtent).catch(function(error) {
           if (error.name != "AbortError") {
             console.error(error);
           }
@@ -292,9 +289,9 @@
       
       function changeDivision() {
         if (wheelsDivBtn.checked) {
-          featureLayer.definitionExpression = "Mode = 'onWheels'";
+          runFeatureLayer.definitionExpression = "Mode = 'onWheels'";
         } else {
-          featureLayer.definitionExpression = "Mode = 'onFoot'";
+          runFeatureLayer.definitionExpression = "Mode = 'onFoot'";
         }
       }
     });
