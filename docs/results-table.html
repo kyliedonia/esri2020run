@@ -70,28 +70,40 @@
       });
       
       // RANK SECTION 1 START
-      let sortedSpeeds = [];
-      const queryRun = new Query({
+      let runSortedSpeeds = [];
+      let bikeSortedSpeeds = [];
+      const runQuery = new Query({
         returnGeometry: false,
         outFields: ["speed_km"],
         where: "distance_km > 4.9 AND Mode='onFoot'",
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
-      });      
-      runFeatureLayer.load().then(function() {
-        runFeatureLayer.queryFeatures(queryRun).then(function(runResults) {
-          const runFeatures = runResults.features;
-          sortedSpeeds = runFeatures.map(function(feature) {
-            return feature.attributes["speed_km"];
-          });
-        });
-      });
-      const queryBike = new Query({
+      });            
+      const bikeQuery = new Query({
         returnGeometry: false,
         outFields: ["speed_km"],
         where: "distance_km > 19.9 AND Mode='onWheels'",
         cacheHint: true,
         orderByFields: ["speed_km DESC"]
+      });
+      [runFeatureLayer, bikeFeatureLayer].forEach(function(layer, index){
+        layer.load().then(function() {
+          var query = runQuery;
+          if (index == 1) {
+            query = bikeQuery
+          }
+          console.log(index, layer.title)
+          layer.queryFeatures(query).then(function(results) {
+            const features = results.features;
+            const sortedSpeeds = features.map(function(feature) {
+              return feature.attributes["speed_km"];
+            });
+            if (index == 0)
+              runSortedSpeeds = sortedSpeeds;
+            else
+              bikeSortedSpeeds = sortedSpeeds;
+          });
+        });
       });
       
       // RANK SECTION 1 END
@@ -137,7 +149,7 @@
           {
             name: "Mode",
             label: "Mode",
-            visible: false
+            visible: true
           }
         ]
       const runFeatureTable = new FeatureTable({
@@ -146,35 +158,77 @@
         fieldConfigs: fieldsForTable,
         visibleElements: {header: false, menu: false, selectionColumn: false}
       });
+      const bikeFeatureTable = new FeatureTable({
+        layer: bikeFeatureLayer,
+        container: document.getElementById("tableDiv"),
+        fieldConfigs: fieldsForTable,
+        visibleElements: {header: false, menu: false, selectionColumn: false}
+      });
       // Format the columns of results
-      watchUtils.watch(runFeatureTable, "columns.length", function(length) {
+      watchUtils.watch(runFeatureTable, "columns.length", function(featureTable, length) {
+        formatColumns(runFeatureTable, length, false);
+      });
+      watchUtils.watch(bikeFeatureTable, "columns.length", function(featureTable, length) {
+        formatColumns(bikeFeatureTable, length, true);
+      });
+      // done formatting columns
+      
+      const metricUnitsBtn = document.getElementById("metricUnits");
+      const imperialUnitsBtn = document.getElementById("imperialUnits");
+      // Wire up button click event listeners
+      metricUnitsBtn.addEventListener("click", changeUnits);
+      imperialUnitsBtn.addEventListener("click", changeUnits);
+      
+      //Change units used in display 
+      //  - Show distance, speed, and pace in km, elevation in m
+      //  - Show distance, speed, and pace in mi, elevation in ft
+      function changeUnits() {
+        if (metricUnitsBtn.checked) {
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("distance_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("speed_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("pace_per_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("distance_mi") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("speed_mi") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("pace_per_mi") });
+        } else {
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("distance_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("speed_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.hideColumn("pace_per_km") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("distance_mi") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("speed_mi") });
+          [runFeatureTable,bikeFeatureTable].forEach(function (table) { table.showColumn("pace_per_mi") });
+        }
+      }
+      
+      function formatColumns(featureTable, length, bike) {
         if (length) {
           // RANK SECTION 2 START
-          const items = runFeatureTable.columns.items;
+          const items = featureTable.columns.items;
           // Don't add virtual column a second time
           // Prevents infinite loop
           if (items[items.length - 1].path === "virtual-column") {
             return;
           }
+        } 
           // Add ranking
           var rankHeader = "Place (5K+)";
-          if (wheelsDivBtn.checked) {
+          if (bike) {
             rankHeader = "Place (20k+)";
           }
-          runFeatureTable.columns.add(
+          featureTable.columns.add(
             new Column({
-              store: runFeatureTable.viewModel.store,
+              store: featureTable.viewModel.store,
               sortable: false,
               path: "virtual-column",
               header: rankHeader,
               getCellValue: function(columnElement, rowData) {
                 const item = rowData.item;
-                const runIndex = sortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
-                const bikeIndex = sortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
+                const runIndex = runSortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
+                const bikeIndex = bikeSortedSpeeds.indexOf(item.feature.attributes["speed_km"]);
                 if (item.feature.attributes["distance_km"] >= 4.9 && item.feature.attributes["Mode"] === "onFoot") {
                   return runIndex !== undefined ? (runIndex + 1).toString() : "no"; 
                 } else if (item.feature.attributes["distance_km"] >= 19.9 && item.feature.attributes["Mode"] === "onWheels") {
-                  return bikeIndex !== undefined ? (bikeIndex + 1000).toString() : "no"; 
+                  return bikeIndex !== undefined ? (bikeIndex + 1).toString() : "no"; 
                 } else {
                   return "n/a";
                 }
@@ -182,7 +236,8 @@
             })
           );
           // RANK SECTION 2 END
-          runFeatureTable.columns.items.forEach((item) => {
+          
+          featureTable.columns.items.forEach((item) => {
             if (item.path !== "nickname") {
               item.textAlign = "end";
             }
@@ -222,104 +277,13 @@
               console.log("nope", item.path);
             }
           });
-        }
-      });
-      // done formatting columns
-      const footDivBtn = document.getElementById("footDivision");
-      const wheelsDivBtn = document.getElementById("wheelsDivision");
-      const fastestBtn = document.getElementById("fastest");
-      const longestBtn = document.getElementById("longest");
-      //const timeTotalBtn = document.getElementById("timeTotal");
-      //const distanceTotalBtn = document.getElementById("distanceTotal");
-      const metricUnitsBtn = document.getElementById("metricUnits");
-      const imperialUnitsBtn = document.getElementById("imperialUnits");
-      // Wire up button click event listeners
-      footDivBtn.addEventListener("click", changeDivision);
-      wheelsDivBtn.addEventListener("click", changeDivision);
-      //fastestBtn.addEventListener("click", showFastestResults);
-      //longestBtn.addEventListener("click", showLongestResults);
-      //timeTotalBtn.addEventListener("click", showTimeTotalResults);
-      //distanceTotalBtn.addEventListener("click", showDistanceTotalResults);
-      metricUnitsBtn.addEventListener("click", changeUnits);
-      imperialUnitsBtn.addEventListener("click", changeUnits);
-      // Fires when "fastest" button is clicked
-      function showFastestResults() {
-        // Sorts the table by speed and limits to runs over 5km
-        if (metricUnitsBtn.checked) {
-          runFeatureTable.sortColumn("speed_km", "desc");
-        } else {
-          runFeatureTable.sortColumn("speed_mi", "desc");
-        }
-      }
-      // Fires when "longest" button is clicked
-      function showLongestResults() {
-        // Sorts the table by distance
-        if (metricUnitsBtn.checked) {
-          runFeatureTable.sortColumn("distance_km", "desc");
-        } else {
-          runFeatureTable.sortColumn("distance_mi", "desc");
-        }
-      }
-      // Fires when "timeTotal" button is clicked
-      function showTimeTotalResults() {
-        // Sorts the table by distance
-        view.goTo(runFeatureLayer.fullExtent).catch(function(error) {
-          if (error.name != "AbortError") {
-            console.error(error);
-          }
-        });
-      }
-      // Fires when "distanceTotal" button is clicked
-      function showDistanceTotalResults() {
-        // Sorts the table by distance
-        view.goTo(runFeatureLayer.fullExtent).catch(function(error) {
-          if (error.name != "AbortError") {
-            console.error(error);
-          }
-        });
-      }
-      //Change units used in display 
-      //  - Show distance, speed, and pace in km, elevation in m
-      //  - Show distance, speed, and pace in mi, elevation in ft
-      function changeUnits() {
-        if (metricUnitsBtn.checked) {
-          runFeatureTable.showColumn("distance_km");
-          runFeatureTable.showColumn("speed_km");
-          runFeatureTable.showColumn("pace_per_km");
-          runFeatureTable.hideColumn("distance_mi");
-          runFeatureTable.hideColumn("speed_mi");
-          runFeatureTable.hideColumn("pace_per_mi");
-        } else {
-          runFeatureTable.hideColumn("distance_km");
-          runFeatureTable.hideColumn("speed_km");
-          runFeatureTable.hideColumn("pace_per_km");
-          runFeatureTable.showColumn("distance_mi");
-          runFeatureTable.showColumn("speed_mi");
-          runFeatureTable.showColumn("pace_per_mi");
-        }
-      }
-      
-      function changeDivision() {
-        if (wheelsDivBtn.checked) {
-          runFeatureLayer.definitionExpression = "Mode = 'onWheels'";
-        } else {
-          runFeatureLayer.definitionExpression = "Mode = 'onFoot'";
-        }
-      }
+        } 
     });
   </script>
 </head>
 
 <body>
-  <div id="divActions" class="esri-widget division actions">    
-    <fieldset class="radio-group">
-      <legend class="radio-group-title">Division</legend>
-      <input type="radio" id="footDivision" name="division" value="onFoot" checked>
-      <label for="footDivision">Run/Walk</label>
-      <input type="radio" id="wheelsDivision" name="division" value="onWheels">
-      <label for="wheelsDivision">Bike</label>
-    </fieldset>
-  </div>  
+  <h1 style="display:block;">Results</h1>
   <div id="unitActions" class="esri-widget units actions">
     <fieldset class="radio-group">
       <legend class="radio-group-title">Units</legend>
@@ -328,16 +292,9 @@
       <input type="radio" id="imperialUnits" name="units" value="mi">
       <label for="imperialUnits">miles</label>
     </fieldset>
-    <!--<h4>Results</h4>
-    <button class="esri-button" id="fastest">Fastest 5k+ run results</button>
-    <button class="esri-button" id="longest">Longest run results</button>-->
-    <!--button class="esri-button" id="timeTotal">Time on feet results</button>
-      <button class="esri-button" id="distanceTotal">Total distance results</button-->
   </div>
-
-  <div class="container">
+  
+   <div class="container">
     <div id="tableDiv"></div>
   </div>
-</body>
-
 </html>
