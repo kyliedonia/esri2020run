@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.19/"></script>
 
+  <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.52/calcite.esm.js"></script>
+  <script nomodule="" src="https://js.arcgis.com/calcite-components/1.0.0-beta.52/calcite.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.52/calcite.css" />
+  
   <style>
     html,
     body {
@@ -25,16 +29,13 @@
     .units {
       width: 220px;
       right: 0px;
-      float: left;
+      padding-bottom: 20px;
+      float: right;
     }
     .division {
       width: 220px;
       right: 0px;
       float: left;
-    }
-
-    .actions {
-      padding: 5px 10px;
     }
 
     .container {
@@ -113,11 +114,6 @@
             label: "Participant"
           },
           {
-            name: "status",
-            label: "Status",
-            direction: "desc"
-          },
-          {
             name: "distance_km",
             label: "Distance (km)",
             direction: "desc"
@@ -147,20 +143,24 @@
             visible: false
           },
           {
+            name: "status",
+            label: "Status"
+          },
+          {
             name: "Mode",
             label: "Mode",
-            visible: true
+            visible: false
           }
         ]
       const runFeatureTable = new FeatureTable({
         layer: runFeatureLayer,
-        container: document.getElementById("tableDiv"),
+        container: document.getElementById("tableDivRun"),
         fieldConfigs: fieldsForTable,
         visibleElements: {header: false, menu: false, selectionColumn: false}
       });
       const bikeFeatureTable = new FeatureTable({
         layer: bikeFeatureLayer,
-        container: document.getElementById("tableDiv"),
+        container: document.getElementById("tableDivBike"),
         fieldConfigs: fieldsForTable,
         visibleElements: {header: false, menu: false, selectionColumn: false}
       });
@@ -294,7 +294,17 @@
     </fieldset>
   </div>
   
-   <div class="container">
-    <div id="tableDiv"></div>
+  <div class="container">
+    <div id="tableDivRun"></div>
+    <div id="tableDivBike"></div>
   </div>
+  
+  <!--calcite-tabs>
+    <calcite-tab-nav slot="tab-nav">
+        <calcite-tab-title active>Run</calcite-tab-title>
+        <calcite-tab-title>Bike</calcite-tab-title>
+    </calcite-tab-nav>
+    <calcite-tab active class="container"><div id="tableDivRun"></div></calcite-tab>
+    <calcite-tab class="container"><div id="tableDivBike"></div></calcite-tab>
+</calcite-tabs-->
 </html>
