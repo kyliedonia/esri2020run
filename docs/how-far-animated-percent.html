@@ -218,7 +218,7 @@
                 graphicSoFar.geometry = alongInfo.along;
                 locationSoFar.geometry = alongInfo.location;
                 if (distance >= DISTANCE) {
-                  locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km', '${integer.format(distance/40054 * 100)} %`, larger);
+                  locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km`, `${integer.format(distance/40054 * 100)} %`, larger);
                 } else {
                   locationSoFar.symbol = createLocationSymbol(``, larger);
                 }
