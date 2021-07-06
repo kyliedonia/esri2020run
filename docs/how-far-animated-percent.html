@@ -220,7 +220,7 @@
                 if (distance >= DISTANCE) {
                   locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km`, `${integer.format(distance/40054 * 100)} %`, larger);
                 } else {
-                  locationSoFar.symbol = createLocationSymbol(``, ``, larger);
+                  //locationSoFar.symbol = createLocationSymbol(``, ``, larger);
                 }
                 return view.goTo({
                   target: locationSoFar.geometry,
