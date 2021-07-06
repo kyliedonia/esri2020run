@@ -109,7 +109,7 @@
                 color: centerColor
               },
               verticalOffset: {
-                screenLength: 750,
+                screenLength: 1750,
                 maxWorldLength: 800000,
                 minWorldLength: 80000
               }
@@ -207,7 +207,7 @@
                 graphicSoFar.geometry = alongInfo.along;
                 locationSoFar.geometry = alongInfo.location;
                 if (distance >= DISTANCE) {
-                  locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km \n ${integer.format(distance/40054 * 100)} %`, larger);
+                  locationSoFar.symbol = createLocationSymbol(`${integer.format(distance)} km \n \n ${integer.format(distance/40054 * 100)} %`, larger);
                 } else {
                   locationSoFar.symbol = createLocationSymbol(``, larger);
                 }
